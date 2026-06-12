@@ -1,0 +1,112 @@
+/* =========================================================
+   AÉROPÔLE GRAND NANCY TOMBLAINE — ULTRA PRO DESIGN SYSTEM
+   Version 4.0 · Cockpit Premium · Portrait 43"
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   1. DESIGN TOKENS
+   --------------------------------------------------------- */
+:root {
+    /* Palette */
+    --bg-primary: #070B14;
+    --bg-secondary: #0C1220;
+    --bg-card: rgba(14, 21, 38, 0.75);
+    --bg-card-hover: rgba(20, 28, 48, 0.88);
+    --bg-elevated: rgba(22, 33, 56, 0.9);
+
+    /* Gold Spectrum (Now Aeropole Blue) */
+    --gold: #0b70c1;
+    --gold-light: #3e9df0;
+    --gold-dark: #064ba6;
+    --gold-glow: rgba(11, 112, 193, 0.25);
+
+    /* Accent */
+    --blue: #3B82F6;
+    --blue-glow: rgba(59, 130, 246, 0.2);
+
+    /* Semantic */
+    --green: #34D399;
+    --green-bg: rgba(52, 211, 153, 0.1);
+    --amber: #FBBF24;
+    --amber-bg: rgba(251, 191, 36, 0.1);
+    --red: #F87171;
+    --red-bg: rgba(248, 113, 113, 0.1);
+
+    /* Text */
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-tertiary: #64748B;
+    --text-inverse: #0F172A;
+
+    /* Borders */
+    --border: rgba(255, 255, 255, 0.06);
+    --border-hover: rgba(255, 255, 255, 0.12);
+    --border-active: rgba(11, 112, 193, 0.4);
+
+    /* Glass */
+    --glass-blur: 40px;
+    --glass-saturate: 180%;
+4
+<truncated 20749 bytes>
+grid-template-columns: 1fr 1fr;
+    gap: var(--gap);
+}
+
+/* Mini stat card */
+.stat-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    text-align: center;
+}
+.stat-card__value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+.stat-card__label {
+    font-size: 0.7rem;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+}
+
+/* ---------------------------------------------------------
+   12. FLIGHT BOARD
+   --------------------------------------------------------- */
+.flight-board {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+}
+.flight-board thead th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--border);
+}
+.flight-board tbody tr {
+    transition: background var(--t-fast);
+}
+.flight-board tbody tr:nth-child(even) {
+    background: rgba(255,255,255,0.015);
+}
+.flight-board tbody td {
+    padding: 14px 12px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    vertical-align: middle;
+}
+.flight-board .flight-id {
+    font-weight: 700;
+    color: var(--text-primary);

@@ -1,0 +1,61 @@
+{
+  "general": {
+    "title": "VOTRE AÉROPORT VOUS PROPOSE",
+    "subtitle": "Services à proximité et dans l'Aéropôle"
+  },
+  "media": {
+    "topVideoUrl": "https://www.w3schools.com/html/mov_bbb.mp4",
+    "screensaverVideoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+  },
+  "companies": {
+    "hotel": {
+      "name": "Hôtel",
+      "image": "assets/hotel_nancy.png",
+      "description": "Retrouvez les meilleurs hôtels à proximité de l'Aéropôle. Chambres confortables et services premium pour votre séjour en Lorraine.",
+      "contact": "Réception 24/7. Navette disponible sur demande.",
+      "qrUrl": "https://www.booking.com/"
+    },
+    "restaurant": {
+      "name": "Restaurant",
+      "image": "assets/restaurant_nancy.png",
+      "description": "Profitez d'une cuisine raffinée à deux pas des pistes. Notre chef vous propose une carte variée élaborée avec des produits locaux.",
+      "contact": "Ouvert du lundi au samedi, 12h-14h et 19h-22h.",
+      "qrUrl": "https://www.lafourchette.com/"
+    },
+    "taxi": {
+      "name": "Taxi VTC Services",
+      "image": "assets/vtc_luxury.png",
+      "description": "Service de transport premium disponible 24/7. Transferts aéroport, gare et déplacements privés dans tout le Grand Est.",
+      "contact": "Réservation au 03 83 00 00 00",
+      "qrUrl": "https://www.uber.com/"
+    },
+    "map": {
+      "name": "Plan de l'Aéroport",
+      "image": "assets/card_map.png",
+      "description": "Trouvez facilement votre chemin dans l'Aéropôle : salles de réunion, terminaux, parkings et hangars.",
+      "contact": "Accueil au Terminal : 03 83 29 56 00",
+      "qrUrl": "https://www.nancy.aeroport.fr/acces"
+    },
+    "locations": {
+      "name": "Locations",
+      "image": "assets/card_location.png",
+      "description": "Louez vos salles de réunion (Saint-Exupéry, Marvingt) et bureaux au cœur de l'Aéropôle avec vue sur les pistes.",
+      "contact": "Service location : 03 83 29 56 00",
+      "qrUrl": "https://www.nancy.aeroport.fr/services/location"
+    },
+    "aerops": {
+      "name": "AEROPS",
+      "image": "assets/logo_aerops.png",
+      "description": "Payez votre taxe d'atterrissage, de stationnement ou vos pleins de carburant facilement avec l'application AEROPS.",
+      "contact": "Assistance AEROPS dans l'application.",
+      "qrUrl": "https://aerops.com/"
+    },
+    "infos": {
+      "name": "Infos Pratiques",
+      "image": "assets/card_secretariat.png",
+      "description": "Retrouvez toutes les informations pratiques pour votre séjour : horaires d'ouverture, contacts d'urgence, formalités de douane.",
+      "contact": "Secrétariat : 03 83 29 56 00",
+      "qrUrl": "https://www.nancy.aeroport.fr/infos-pratiques"
+    }
+  }
+}

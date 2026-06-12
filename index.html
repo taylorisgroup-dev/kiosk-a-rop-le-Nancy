@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aéropôle Grand Nancy Tomblaine — Borne Interactive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Roboto:wght@400;500;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+</head>
+<body oncontextmenu="return false;">
+
+<!-- ===== SCREENSAVER (covers everything, fixed) ===== -->
+<div class="screensaver active" id="screen-attract" onclick="closeScreensaver()">
+    <div class="attract-bg"></div>
+    <div class="attract-content">
+        <div class="attract-plane"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.4-.1.9.3 1.1L11 12l-2 3H6l-2 2 4-1 4-1 2-2 4.3 7.3c.2.4.7.6 1.1.3l.5-.3c.4-.2.5-.7.3-1.1z"/></svg></div>
+        <h1 class="attract-title" id="attract-title">Bienvenue à l'Aéropôle</h1>
+        <p class="attract-subtitle" id="attract-subtitle">Touchez l'écran pour accéder à vos services</p>
+        <div class="attract-pulse"></div>
+    </div>
+</div>
+
+<div id="app">
+    <!-- HEADER -->
+    <header class="app-header">
+        <div class="header-logo">
+            <img src="assets/logo_aeropole.jpg" alt="Aéropôle Logo" onerror="this.style.display='none'">
+        </div>
+        
+        <div class="lang-flags">
+            <img src="https://flagcdn.com/w80/fr.png" alt="FR" class="lang-flag active" onclick="setLang('fr')">
+            <img src="https://flagcdn.com/w80/gb.png" alt="EN" class="lang-flag" onclick="setLang('en')">
+            <img src="https://flagcdn.com/w80/de.png" alt="DE" class="lang-flag" onclick="setLang('de')">
+            <img src="https://flagcdn.com/w80/es.png" alt="ES" class="lang-flag" onclick="setLang('es')">
+        </div>
+
+        <div class="header-time">
+            <div id="header-weather" class="header-weather" onclick="if(window.openMeteo) window.openMeteo()"></div>
+            <div>
+                <div id="main-clock"></div>
+                <div id="main-date"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- SCREENS CONTAINER — below header, fills remaining space -->
+    <div class="screens-wrap" id="screens-wrap">
+
+        <!-- HOME -->
+        <div class="screen active" id="screen-home">
+            <div class="video-banner" id="video-banner-container"></div>
+            <div class="section-title">
+                <h2 id="ui-title">VOTRE AÉROPORT VOUS PROPOSE</h2>
+                <p id="ui-subtitle">Services à proximité</p>
+            </div>
+            <div class="home-grid" id="categories-grid"></div>
+            <!-- PMR BUTTON -->
+            <button class="btn-pmr" onclick="togglePMR()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+            </button>
+        </div>
+
+        <!-- PROVIDERS LIST -->
+        <div class="screen" id="screen-list">
+            <div class="sub-header">
+                <button class="btn-back" onclick="goHome()">Retour</button>
+                <h2 id="list-title">Prestataires</h2>
+            </div>
+            <div class="list-grid" id="providers-grid"></div>
+        </div>
+
+        <!-- ENTREPRISES LIST (vertical) -->
+        <div class="screen" id="screen-entreprises">
+            <div class="sub-header">
+                <button class="btn-back" onclick="goHome()">Retour</button>
+                <h2>Entreprises Partenaires</h2>
+            </div>
+            <div class="ent-list" id="ent-list"></div>
+        </div>
+
+        <!-- PLAN OVERVIEW -->
+        <div class="screen" id="screen-plan">
+            <div class="sub-header">
+                <button class="btn-back" onclick="goHome()">Retour</button>
+                <h2>Plan de l'Aéropôle</h2>
+                <div class="plan-legend">
+                    <span class="legend-dot red"></span>Rue Marie Marvingt
+                    <span class="legend-dot green"></span>Av. Nelson Mandela
+                    <span class="legend-dot blue"></span>Av. N. Mandela prolongée
+                </div>
+            </div>
+            <div class="plan-content-wrap">
+                <div class="plan-map-wrap" id="plan-map-wrap">
+                    <img src="assets/map_annotated_original.png" alt="Plan Aéropôle" class="plan-bg static-plan">
+                </div>
+                <div class="plan-table-wrap">
+                    <table class="plan-table" id="plan-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">N°</th>
+                                <th>Entreprise</th>
+                            </tr>
+                        </thead>
+                        <tbody id="plan-table-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- MÉTÉO -->
+        <div class="screen" id="screen-meteo">
+            <div class="sub-header">
+                <button class="btn-back" onclick="goHome()">Retour</button>
+                <h2>Météo Aéronautique</h2>
+                <span class="badge-source">ECMWF / Open-Meteo</span>
+            </div>
+            <div class="meteo-content">
+                <div class="meteo-results" id="meteo-results-nancy">
+                    <div class="empty-state"><p>Chargement météo locale...</p></div>
+                </div>
+                <div class="meteo-search">
+                    <div class="meteo-field"><label>Rechercher une destination</label><input type="text" id="meteo-destination" placeholder="Ex: Paris, Lyon..."><div class="meteo-suggestions" id="suggestions-dest"></div></div>
+                    <button class="btn-search" onclick="searchDestWeather()">Consulter</button>
+                </div>
+                <div class="meteo-results" id="meteo-results-dest"></div>
+            </div>
+        </div>
+
+        <!-- SCREEN AEROPS -->
+        <div class="screen" id="screen-aerops">
+            <div class="sub-header">
+                <button class="btn-back" onclick="goHome()" data-i18n="back">RETOUR</button>
+                <h2 id="aerops-page-title">Aerops</h2>
+            </div>
+            <div class="aerops-content">
+                <div class="aerops-hero" style="background: #fff; display: flex; align-items: center; justify-content: center;"><img id="aerops-hero-img" src="assets/aerops_qr.jpg" alt="" style="max-height: 80%; width: auto; object-fit: contain; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-radius: 12px;"></div>
+                <div class="aerops-info" style="background: rgba(15,23,42,0.9); backdrop-filter: blur(10px);">
+                    <img src="assets/logo_aerops.png" class="aerops-logo-big" alt="" style="background: white; border-radius: 12px; padding: 15px; margin-bottom: 20px; width: 120px;">
+                    <h3 id="aerops-headline"></h3>
+                    <p id="aerops-desc"></p>
+                    <div class="aerops-qr" style="background: transparent; border: none; box-shadow: none;">
+                        <p data-i18n="downloadApp">Scannez pour payer</p>
+                        <img src="assets/aerops_qr.jpg" alt="QR Code AeroPS" style="width: 220px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 5px solid white;">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN INFOS PRATIQUES -->
+        <div class="screen" id="screen-infos">
+            <div class="sub-header">
+                <button class="btn-back" onclick="goHome()" data-i18n="back">RETOUR</button>
+                <h2 id="infos-page-title">Infos Pratiques</h2>
+            </div>
+            <div class="aerops-content">
+                <div class="aerops-hero"><img id="infos-hero-img" src="" alt=""></div>
+                <div class="aerops-info">
+                    <h3 id="infos-headline"></h3>
+                    <p id="infos-desc"></p>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /screens-wrap -->
+
+    <!-- MARQUEE BANNER -->
+    <div class="marquee-banner" id="marquee-banner">
+        <div class="marquee-track" id="marquee-track"></div>
+    </div>
+
+    <!-- ENTERPRISE MAP MODAL -->
+    <div class="modal" id="ent-map-modal" style="display:none;">
+        <div class="modal-content ent-modal">
+            <button class="modal-back-btn" onclick="closeEntMap()">← RETOUR</button>
+            <button class="close-btn" onclick="closeEntMap()">✕</button>
+            <div class="ent-modal-header">
+                <div class="ent-modal-logo" id="ent-modal-logo"></div>
+                <div><h2 id="ent-modal-name"></h2><p id="ent-modal-desc"></p></div>
+                <span class="map-company-badge" id="ent-modal-badge"></span>
+            </div>
+            <div class="ent-modal-map" id="ent-modal-map">
+                <img src="assets/map_aerial.jpg" alt="Plan">
+                <svg id="ent-map-svg" viewBox="0 0 1024 431" preserveAspectRatio="xMidYMid meet"><path id="ent-dynamic-path" d="" stroke="#ff0000" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" class="path-animate"/></svg>
+                <div id="ent-map-pins"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPANY MODAL (hotels etc) -->
+    <div class="modal" id="company-modal" style="display:none;">
+        <div class="modal-content">
+            <button class="modal-back-btn" onclick="closeModal()">← RETOUR</button>
+            <button class="close-btn" onclick="closeModal()">✕</button>
+            <img id="modal-image" class="provider-hero" src="" alt="">
+            <div class="provider-body">
+                <h2 id="modal-title"></h2>
+                <p class="desc" id="modal-desc"></p>
+                <p class="contact-info" id="modal-contact"></p>
+                <div class="qr-section" id="qr-section"><div id="modal-qrcode"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <script src="js/i18n.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

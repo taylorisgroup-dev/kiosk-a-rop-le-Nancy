@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administration — Borne Aéropôle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Roboto:wght@400;500;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <style>
+        :root { --accent: #0ea5e9; --accent-dark: #0284c7; --bg: #f1f5f9; --card: #fff; --border: #e2e8f0; --text: #0f172a; --text2: #64748b; --green: #10b981; --red: #ef4444; --radius: 12px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; }
+        body { background: var(--bg); color: var(--text); }
+        h1, h2, h3 { font-family: 'Montserrat', sans-serif; }
+        .admin-layout { display: flex; min-height: 100vh; }
+        .sidebar { width: 240px; background: var(--text); color: #fff; padding: 20px 0; position: fixed; top: 0; bottom: 0; overflow-y: auto; }
+        .sidebar h1 { font-size: 1.1rem; padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,.1); }
+        .sidebar-nav { list-style: none; padding: 10px 0; }
+        .sidebar-nav li { padding: 12px 20px; cursor: pointer; font-size: .9rem; font-weight: 500; transition: background .15s; display: flex; align-items: center; gap: 10px; }
+        .sidebar-nav li:hover { background: rgba(255,255,255,.08); }
+        .sidebar-nav li.active { background: var(--accent); }
+        .main { margin-left: 240px; flex: 1; padding: 30px; }
+        
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #fff; padding: 15px 25px; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,.05); }
+        .lang-selector { display: flex; align-items: center; gap: 10px; }
+        .lang-selector select { padding: 8px 12px; font-weight: bold; border-radius: 6px; font-size: 1rem; cursor: pointer; background: #f8fafc; border: 2px solid var(--border); }
+        
+        .section { display: none; }
+        .section.active { display: block; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-header h2 { font-size: 1.8rem; font-weight: 800; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+        .card h3 { font-size: 1.1rem; margin-bottom: 15px; color: var(--text); font-weight: 700; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: .8rem; font-weight: 600; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
+        input[type="text"], textarea, select { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; font-size: .95rem; outline: none; transition: border-color .2s; }
+        input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+        textarea { min-height: 80px; resize: vertical; }
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border: none; border-radius: 8px; font-size: .9rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: var(--accent-dark); }
+        .btn-success { background: var(--green); color: #fff; }
+        .btn-danger { background: var(--red); color: #fff; font-size: .8rem; padding: 6px 12px; }
+        .btn-save-main { position: fixed; bottom: 20px; right: 30px; padding: 16px 40px; font-size: 1.1rem; z-index: 100; box-shadow: 0 8px 25px rgba(14,165,233,.3); }
+        .provider-card { background: #f8fafc; border: 1px solid var(--border); padding: 18px; border-radius: 10px; margin-bottom: 15px; position: relative; }
+        .provider-card .pc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .provider-card .pc-name { font-weight: 700; font-size: 1rem; }
+        .toast { position: fixed; top: 20px; right: 20px; background: var(--green); color: white; padding: 14px 24px; border-radius: 10px; display: none; font-weight: 600; z-index: 1000; box-shadow: 0 8px 20px rgba(0,0,0,.15); }
+        /* Stats */
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; }
+        .stat-card .stat-value { font-size: 2.5rem; font-weight: 700; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+        .stat-card .stat-label { font-size: .75rem; color: var(--text2); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+        .stat-table { width: 100%; border-collapse: collapse; }
+        .stat-table th, .stat-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: .9rem; }
+        .stat-table th { font-weight: 700; color: var(--text2); font-size: .75rem; text-transform: uppercase; letter-spacing: .5px; }
+        .stat-bar { height: 6px; background: var(--accent); border-radius: 3px; min-width: 4px; }
+        .cat-card { display: flex; align-items: center; gap: 12px; background: #f8fafc; border: 1px solid var(--border); padding: 12px 16px; border-radius: 10px; margin-bottom: 10px; }
+        .cat-card img { width: 50px; height: 50px; object-fit: cover; border-radius: 8px; }
+        .cat-card .cat-info { flex: 1; }
+        .cat-card .cat-info strong { display: block; font-size: .95rem; }
+        .cat-card .cat-info small { color: var(--text2); font-size: .8rem; }
+    </style>
+</head>
+<body>
+
+<div class="toast" id="toast">✅ Modifications enregistrées avec succès !</div>
+
+<div class="admin-layout">
+    <aside class="sidebar">
+        <h1>⚙️ Admin Borne</h1>
+        <ul class="sidebar-nav" id="sidebar-nav">
+            <li class="active" data-section="general">📋 Général</li>
+            <li data-section="screensaver">🖥️ Écran de veille</li>
+            <li data-section="media">🎬 Médias</li>
+            <li data-section="map">🗺️ Carte & Itinéraires</li>
+            <li data-section="categories">📁 Catégories</li>
+            <li data-section="providers">🏢 Prestataires</li>
+            <li data-section="aerops">✈️ Aerops</li>
+            <li data-section="infos">ℹ️ Infos Pratiques</li>
+            <li data-section="stats">📊 Statistiques</li>
+        </ul>
+    </aside>
+
+    <main class="main" id="admin-main">
+        
+        <div class="admin-header">
+            <div>
+                <h2>Bienvenue dans le Back-Office</h2>
+                <p style="color:var(--text2);font-size:.9rem;">Interface multilingue. Choisissez la langue d'édition :</p>
+            </div>
+            <div class="lang-selector">
+                <label>Langue :</label>
+                <select id="admin-lang" onchange="changeAdminLang()">
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="en">🇬🇧 Anglais</option>
+                    <option value="de">🇩🇪 Allemand</option>
+                    <option value="es">🇪🇸 Espagnol</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- GENERAL -->
+        <div class="section active" id="sec-general">
+            <div class="section-header"><h2>Paramètres Généraux</h2></div>
+            <div class="card">
+                <h3>Textes de l'accueil</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>Titre principal</label><input type="text" id="gen_title"></div>
+                    <div class="form-group"><label>Sous-titre</label><input type="text" id="gen_subtitle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREENSAVER -->
+        <div class="section" id="sec-screensaver">
+            <div class="section-header"><h2>Écran de Veille</h2></div>
+            <div class="card">
+                <h3>Textes affichés</h3>
+                <div class="form-row">
+                    <div class="form-group"><label>Titre</label><input type="text" id="ss_title"></div>
+                    <div class="form-group"><label>Sous-titre</label><input type="text" id="ss_subtitle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MEDIA -->
+        <div class="section" id="sec-media">
+            <div class="section-header"><h2>Médias</h2></div>
+            <div class="card">
+                <h3>Vidéo de l'accueil</h3>
+                <p style="color:var(--text2);font-size:.85rem;margin-bottom:15px;">Vous pouvez saisir un lien (YouTube, mp4) ou uploader une vidéo locale (max 200 Mo).</p>
+                <div class="form-row" style="align-items: flex-end;">
+                    <div class="form-group" style="margin-bottom:0; flex:1;"><label>Lien de la vidéo</label><input type="text" id="media_topVideo" placeholder="https://..."></div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <input type="file" id="media_upload" accept="video/*,image/*" style="display:none;" onchange="uploadMedia(this, 'media_topVideo')">
+                        <button class="btn btn-primary" onclick="document.getElementById('media_upload').click()">📁 Uploader</button>
+                    </div>
+                </div>
+                <div id="upload_progress" style="margin-top:10px; font-size:0.85rem; color:var(--text2); display:none;">Upload en cours...</div>
+            </div>
+        </div>
+
+        <!-- MAP CONFIG -->
+        <div class="section" id="sec-map">
+            <div class="section-header"><h2>Éditeur Visuel de Carte</h2></div>
+            <div class="admin-editor-layout">
+                <div class="admin-editor-sidebar">
+                    <div class="form-group">
+                        <label>URL de l'image de fond</label>
+                        <div style="display:flex;gap:8px;">
+                            <input type="text" id="map_img" style="flex:1" onchange="document.getElementById('editor-img').src = this.value; renderEditorMap();" />
+                            <input type="file" id="map_upload" accept="image/*" style="display:none;" onchange="uploadMedia(this, 'map_img')">
+                            <button class="btn btn-primary" onclick="document.getElementById('map_upload').click()">📁 Uploader</button>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-toolbar-section">
+                        <h4>Placement de la Borne</h4>
+                        <button class="admin-tool-btn" id="tool-kiosk" onclick="setEditorMode('kiosk')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                            Placer "Vous êtes ici"
+                        </button>
+                    </div>
+
+                    <div class="admin-toolbar-section">
+                        <h4>Partenaires & Entreprises</h4>
+                        <select class="form-control" id="tool-provider-select" style="margin-bottom:10px" onchange="if(this.value) setEditorMode('provider')">
+                            <option value="">-- Choisir un partenaire --</option>
+                        </select>
+                        <button class="admin-tool-btn" id="tool-provider" onclick="setEditorMode('provider')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            Placer le numéro
+                        </button>
+                    </div>
+
+                    <div class="admin-toolbar-section">
+                        <h4>Tracés (Lignes)</h4>
+                        <div id="editor-paths-list"></div>
+                        <div class="admin-path-actions" id="path-actions" style="display:none">
+                            <button onclick="editorUndoPath()">Annuler 1 point</button>
+                            <button onclick="editorClearPath()">Effacer la ligne</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin-editor-main">
+                    <div class="admin-editor-map-wrapper" id="editor-map-wrapper" onclick="handleEditorClick(event)">
+                        <img id="editor-img" src="" onload="renderEditorMap()" onerror="this.src=''" />
+                        <svg class="admin-editor-svg" id="editor-svg"></svg>
+                        <div id="editor-pins"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CATEGORIES -->
+        <div class="section" id="sec-categories">
+            <div class="section-header"><h2>Catégories</h2></div>
+            <div class="card">
+                <h3>Catégories de l'accueil</h3>
+                <div id="categories-container"></div>
+            </div>
+        </div>
+
+        <!-- PROVIDERS -->
+        <div class="section" id="sec-providers">
+            <div class="section-header">
+                <h2>Prestataires</h2>
+                <button class="btn btn-success" onclick="addProvider()">+ Ajouter un prestataire</button>
+            </div>
+            <div id="providers-container"></div>
+        </div>
+
+        <!-- AEROPS -->
+        <div class="section" id="sec-aerops">
+            <div class="section-header"><h2>Section Aerops</h2></div>
+            <div class="card">
+                <h3>Contenu de la page Aerops</h3>
+                <div class="form-group"><label>Titre</label><input type="text" id="aerops_title"></div>
+                <div class="form-group"><label>Accroche</label><input type="text" id="aerops_headline"></div>
+                <div class="form-group"><label>Description</label><textarea id="aerops_desc"></textarea></div>
+                <div class="form-row">
+                    <div class="form-group"><label>URL du QR Code</label><input type="text" id="aerops_qrUrl"></div>
+                    <div class="form-group">
+                        <label>Image (chemin ou URL)</label>
+                        <div style="display:flex;gap:8px;">
+                            <input type="text" id="aerops_image" style="flex:1">
+                            <input type="file" id="aerops_upload" accept="image/*" style="display:none;" onchange="uploadMedia(this, 'aerops_image')">
+                            <button class="btn btn-primary" onclick="document.getElementById('aerops_upload').click()">📁 Uploader</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INFOS PRATIQUES -->
+        <div class="section" id="sec-infos">
+            <div class="section-header"><h2>Section Infos Pratiques</h2></div>
+            <div class="card">
+                <h3>Contenu de la page Infos Pratiques</h3>
+                <div class="form-group"><label>Titre</label><input type="text" id="infos_title"></div>
+                <div class="form-group"><label>Accroche</label><input type="text" id="infos_headline"></div>
+                <div class="form-group"><label>Description (Horaires, accès, etc)</label><textarea id="infos_desc" style="min-height:150px;"></textarea></div>
+                <div class="form-group">
+                    <label>Image (chemin ou URL)</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" id="infos_image" style="flex:1">
+                        <input type="file" id="infos_upload" accept="image/*" style="display:none;" onchange="uploadMedia(this, 'infos_image')">
+                        <button class="btn btn-primary" onclick="document.getElementById('infos_upload').click()">📁 Uploader</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="section" id="sec-stats">
+            <div class="section-header">
+                <h2>Statistiques d'utilisation</h2>
+                <button class="btn btn-primary" onclick="loadStats()">🔄 Actualiser</button>
+            </div>
+            <div class="stat-grid" id="stat-summary"></div>
+            <div class="card">
+                <h3>Détail des clics par élément</h3>
+                <table class="stat-table" id="stat-table">
+                    <thead><tr><th>Élément</th><th>Clics</th><th></th></tr></thead>
+                    <tbody id="stat-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<button class="btn btn-primary btn-save-main" onclick="saveData()">💾 ENREGISTRER</button>
+
+
+<script>
+    let currentData = {};
+    let adminLang = 'fr';
+    let adminEditor = {
+        mode: 'idle', // 'idle', 'kiosk', 'provider', 'path'
+        activeProvId: null,
+        activePathId: null
+    };
+
+    function setEditorMode(mode, arg = null) {
+        adminEditor.mode = mode;
+        if(mode === 'provider') {
+            adminEditor.activeProvId = document.getElementById('tool-provider-select').value;
+        } else if(mode === 'path') {
+            adminEditor.activePathId = arg;
+        }
+        
+        // Update UI
+        document.querySelectorAll('.admin-tool-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.admin-path-item').forEach(p => p.classList.remove('active'));
+        document.getElementById('path-actions').style.display = 'none';
+
+        if(mode === 'kiosk') document.getElementById('tool-kiosk').classList.add('active');
+        if(mode === 'provider') document.getElementById('tool-provider').classList.add('active');
+        if(mode === 'path') {
+            document.getElementById('path-item-' + arg).classList.add('active');
+            document.getElementById('path-actions').style.display = 'flex';
+        }
+    }
+
+    function renderEditorSidebar() {
+        // Providers dropdown
+        const select = document.getElementById('tool-provider-select');
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">-- Choisir un partenaire --</option>';
+        (currentData.providers || []).forEach((p, i) => {
+            select.innerHTML += `<option value="${i}">${p.name || ('Prestataire ' + (i+1))}</option>`;
+        });
+        select.value = currentVal;
+
+        // Paths list
+        const c = document.getElementById('editor-paths-list');
+        c.innerHTML = '';
+        if(currentData.mapConfig && currentData.mapConfig.paths) {
+            Object.keys(currentData.mapConfig.paths).forEach(key => {
+                const path = currentData.mapConfig.paths[key];
+                c.innerHTML += `
+                    <div class="admin-path-item" id="path-item-${key}" onclick="setEditorMode('path', '${key}')">
+                        <div class="admin-path-color" style="background:${path.hex}"></div>
+                        <div style="flex:1; font-size:0.9rem">${path.name} (${key})</div>
+                    </div>
+                `;
+            });
+        }
+    }
+
+    function renderEditorMap() {
+        if(!currentData.mapConfig) return;
+        
+        const svg = document.getElementById('editor-svg');
+        svg.setAttribute('viewBox', '0 0 1000 1000');
+        svg.setAttribute('preserveAspectRatio', 'none');
+        svg.innerHTML = '';
+        if(currentData.mapConfig.paths) {
+            Object.keys(currentData.mapConfig.paths).forEach(key => {
+                const path = currentData.mapConfig.paths[key];
+                if(path.d) {
+                    svg.innerHTML += `<path d="${path.d}" stroke="${path.hex}" stroke-width="4" fill="none" stroke-linejoin="round" stroke-linecap="round" />`;
+                }
+            });
+        }
+
+        // Pins
+        const pinsCont = document.getElementById('editor-pins');
+        pinsCont.innerHTML = '';
+
+        // Kiosk Pin
+        const kx = currentData.mapConfig.kioskPos?.x;
+        const ky = currentData.mapConfig.kioskPos?.y;
+        if(kx && ky) {
+            pinsCont.innerHTML += `<div class="admin-editor-pin kiosk" style="left:${kx/10}%; top:${ky/10}%;"></div>`;
+        }
+
+        // Provider Pins
+        (currentData.providers || []).forEach((prov, i) => {
+            if(prov.mapData && prov.mapData.x && prov.mapData.y) {
+                let bg = prov.mapData.color || 'gray';
+                if(bg === 'red') bg = '#ef4444';
+                if(bg === 'green') bg = '#22c55e';
+                if(bg === 'blue') bg = '#3b82f6';
+
+                pinsCont.innerHTML += `
+                    <div class="admin-editor-pin" style="left:${prov.mapData.x/10}%; top:${prov.mapData.y/10}%; background:${bg}; width:30px; height:30px; font-size:0.85rem; border:2px solid white">
+                        ${prov.mapData.pinNum || '?'}
+                    </div>
+                `;
+            }
+        });
+    }
+
+    function handleEditorClick(e) {
+        const rect = document.getElementById('editor-map-wrapper').getBoundingClientRect();
+        const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+        const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+        
+        const xValue = Math.round(xPercent * 10); // 0-1000
+        const yValue = Math.round(yPercent * 10); // 0-1000
+
+        if (adminEditor.mode === 'kiosk') {
+            if(!currentData.mapConfig) currentData.mapConfig = { kioskPos: {} };
+            if(!currentData.mapConfig.kioskPos) currentData.mapConfig.kioskPos = {};
+            currentData.mapConfig.kioskPos.x = xValue;
+            currentData.mapConfig.kioskPos.y = yValue;
+            renderEditorMap();
+        } 
+        else if (adminEditor.mode === 'provider') {
+            if (adminEditor.activeProvId !== null && adminEditor.activeProvId !== "") {
+                const i = parseInt(adminEditor.activeProvId);
+                const prov = currentData.providers[i];
+                if(!prov.mapData) prov.mapData = { color:'', pinNum:'' };
+                prov.mapData.x = xValue;
+                prov.mapData.y = yValue;
+                
+                // Also update the hidden text inputs in the provider list
+                const inX = document.getElementById(`p_${i}_mapx`);
+                const inY = document.getElementById(`p_${i}_mapy`);
+                if(inX) inX.value = xValue;
+                if(inY) inY.value = yValue;
+
+                renderEditorMap();
+            } else {
+                alert("Veuillez sélectionner un partenaire dans la liste d'abord.");
+            }
+        }
+        else if (adminEditor.mode === 'path') {
+            const pathKey = adminEditor.activePathId;
+            const path = currentData.mapConfig.paths[pathKey];
+            
+            // X and Y are in native coordinates of the SVG (assuming 1000x1000 viewBox)
+            // Wait, SVG doesn't have a viewBox set, so we draw relative to SVG dimensions?
+            // Oh, the front-end uses 1000x1000 viewBox. We need to set viewBox="0 0 1000 1000" on the editor SVG.
+            // Let's modify SVG in renderEditorMap to have viewBox="0 0 1000 1000"
+            const cmd = (!path.d || path.d.trim() === '') ? `M ${xValue} ${yValue}` : ` L ${xValue} ${yValue}`;
+            path.d = (path.d || '') + cmd;
+            renderEditorMap();
+        }
+    }
+
+    function editorUndoPath() {
+        if(adminEditor.mode === 'path' && adminEditor.activePathId) {
+            const path = currentData.mapConfig.paths[adminEditor.activePathId];
+            if(path.d) {
+                // Find last M or L
+                const parts = path.d.trim().split(/(?=[ML])/g);
+                parts.pop();
+                path.d = parts.join('');
+                renderEditorMap();
+            }
+        }
+    }
+
+    function editorClearPath() {
+        if(adminEditor.mode === 'path' && adminEditor.activePathId) {
+            currentData.mapConfig.paths[adminEditor.activePathId].d = '';
+            renderEditorMap();
+        }
+    }
+
+    function changeAdminLang() {
+        // First gather existing data for the current language
+        gatherFormData();
+        
+        // Switch language and populate
+        adminLang = document.getElementById('admin-lang').value;
+        populateForm();
+    }
+
+    async function uploadMedia(input, targetId) {
+        if (!input.files || input.files.length === 0) return;
+        const file = input.files[0];
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.innerText = '⏳ Upload en cours...';
+            toast.style.display = 'block';
+            toast.style.background = 'var(--accent)';
+        }
+
+        if (typeof supabaseClient === 'undefined') {
+            if (toast) {
+                toast.innerText = '❌ Supabase non configuré.';
+                toast.style.background = 'var(--red)';
+                setTimeout(() => toast.style.display = 'none', 3000);
+            }
+            return;
+        }
+
+        const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+        const { data, error } = await supabaseClient.storage
+            .from('uploads')
+            .upload(fileName, file, { cacheControl: '3600', upsert: false });
+
+        if (error) {
+            console.error(error);
+            if (toast) {
+                toast.innerText = '❌ Erreur lors de l\'upload: ' + error.message;
+                toast.style.background = 'var(--red)';
+                setTimeout(() => toast.style.display = 'none', 3000);
+            }
+        } else {
+            const { data: publicUrlData } = supabaseClient.storage.from('uploads').getPublicUrl(fileName);
+            const target = document.getElementById(targetId);
+            if(target) {
+                target.value = publicUrlData.publicUrl;
+                target.dispatchEvent(new Event('change'));
+            }
+            if (toast) {
+                toast.innerText = '✅ Upload terminé !';
+                toast.style.background = 'var(--green)';
+                setTimeout(() => toast.style.display = 'none', 3000);
+            }
+        }
+    }
+
+    // Navigation
+    document.querySelectorAll('.sidebar-nav li').forEach(li => {
+        li.addEventListener('click', () => {
+            document.querySelectorAll('.sidebar-nav li').forEach(l => l.classList.remove('active'));
+            li.classList.add('active');
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('sec-' + li.dataset.section).classList.add('active');
+            if (li.dataset.section === 'stats') loadStats();
+        });
+    });
+
+    const DEFAULT_DATA = {"general": {"title": {"fr": "A\u00e9rop\u00f4le Grand Nancy", "en": "Grand Nancy Aeropole"}, "subtitle": {"fr": "Bienvenue sur l'espace d'informations", "en": "Welcome to the information space"}}, "screensaver": {"title": {"fr": "Touchez l'\u00e9cran pour commencer", "en": "Touch the screen to start"}, "subtitle": {"fr": "A\u00e9rop\u00f4le du Grand Nancy", "en": "Grand Nancy Aeropole"}}, "media": {"topVideoUrl": "https://www.youtube.com/watch?v=z8XqQ-fC4g8"}, "categories": [{"id": "meteo", "name": {"fr": "M\u00e9t\u00e9o", "en": "Weather"}, "image": "meteo_tile_1781130694875.png", "special": "meteo"}, {"id": "aerops", "name": {"fr": "AeroPS", "en": "AeroPS"}, "image": "assets/logo_aerops.png", "special": "aerops"}, {"id": "plan", "name": {"fr": "Plan interactif", "en": "Interactive Map"}, "image": "tile_map_1781167893062.png", "special": "plan"}, {"id": "infos", "name": {"fr": "Infos Pratiques", "en": "Practical Info"}, "image": "tile_infos_1781167902885.png", "special": "infos"}, {"id": "entreprises", "name": {"fr": "Entreprises", "en": "Companies"}, "image": "tile_entreprises_1781167911260.png"}, {"id": "hotel", "name": {"fr": "H\u00f4tels", "en": "Hotels"}, "image": "hotel_novotel_1781129239371.png"}, {"id": "restaurant", "name": {"fr": "Restaurants", "en": "Restaurants"}, "image": "tile_restaurant_1781167920958.png"}, {"id": "taxi", "name": {"fr": "Taxis", "en": "Taxis"}, "image": "tile_taxi_1781167930898.png"}, {"id": "locations", "name": {"fr": "Locations de voitures", "en": "Car Rentals"}, "image": "tile_car_1781167940723.png"}], "providers": [{"id": "h1", "categoryId": "hotel", "name": {"fr": "Novotel", "en": "Novotel"}, "description": {"fr": "Un h\u00f4tel moderne avec toutes les commodit\u00e9s.", "en": "A modern hotel with all amenities."}, "image": "hotel_novotel_1781129239371.png", "phone": "03 83 XX XX 01", "address": "Route de l'A\u00e9roport", "mapX": 300, "mapY": 400, "qrUrl": "https://all.accor.com/hotel/novotel"}, {"id": "h2", "categoryId": "hotel", "name": {"fr": "Ibis Styles", "en": "Ibis Styles"}, "description": {"fr": "Confort et design.", "en": "Comfort and design."}, "image": "hotel_ibis_styles_1781129258012.png", "phone": "03 83 XX XX 02", "address": "Route de l'A\u00e9roport", "mapX": 350, "mapY": 400, "qrUrl": "https://all.accor.com/hotel/ibis"}, {"id": "h3", "categoryId": "hotel", "name": {"fr": "Mercure", "en": "Mercure"}, "description": {"fr": "Un s\u00e9jour de qualit\u00e9 sup\u00e9rieure.", "en": "A premium stay."}, "image": "hotel_mercure_1781129248277.png", "phone": "03 83 XX XX 03", "address": "Route de l'A\u00e9roport", "mapX": 400, "mapY": 400, "qrUrl": "https://all.accor.com/hotel/mercure"}, {"id": "h4", "categoryId": "hotel", "name": {"fr": "Kyriad", "en": "Kyriad"}, "description": {"fr": "Un accueil chaleureux.", "en": "A warm welcome."}, "image": "hotel_kyriad_1781129281107.png", "phone": "03 83 XX XX 04", "address": "Avenue des Pilotes", "mapX": 450, "mapY": 400, "qrUrl": "https://kyriad.com"}, {"id": "h5", "categoryId": "hotel", "name": {"fr": "Best Western", "en": "Best Western"}, "description": {"fr": "L'\u00e9l\u00e9gance \u00e0 votre service.", "en": "Elegance at your service."}, "image": "hotel_best_western_1781129268649.png", "phone": "03 83 XX XX 05", "address": "Avenue des Pilotes", "mapX": 500, "mapY": 400, "qrUrl": "https://bestwestern.com"}, {"id": "r1", "categoryId": "restaurant", "name": {"fr": "La Brasserie de l'Aviation", "en": "Aviation Brasserie"}, "description": {"fr": "Cuisine locale et raffin\u00e9e avec vue sur la piste.", "en": "Local refined cuisine with runway view."}, "image": "tile_restaurant_1781167920958.png", "phone": "03 83 XX XX 11", "address": "Terminal", "mapX": 520, "mapY": 420, "qrUrl": "https://google.com/maps"}, {"id": "r2", "categoryId": "restaurant", "name": {"fr": "Le Comptoir Rapide", "en": "Fast Counter"}, "description": {"fr": "Restauration sur le pouce.", "en": "Quick dining."}, "image": "tile_restaurant_1781167920958.png", "phone": "03 83 XX XX 12", "address": "Terminal", "mapX": 540, "mapY": 430, "qrUrl": "https://google.com/maps"}], "aerops": {"title": {"fr": "Payer vos taxes", "en": "Pay fees"}, "headline": {"fr": "AeroPS", "en": "AeroPS"}, "description": {"fr": "Scannez le QR code via l'application AeroPS pour payer vos taxes d'atterrissage facilement.", "en": "Scan QR code with AeroPS app to easily pay landing fees."}, "qrUrl": "https://aerops.com", "image": "aerops_tile_1781130707066.png"}, "infosPratiques": {"title": {"fr": "Infos Pratiques", "en": "Practical Info"}, "headline": {"fr": "Horaires et Acc\u00e8s", "en": "Hours and Access"}, "description": {"fr": "Ouvert tous les jours de 8h \u00e0 20h. L'a\u00e9rodrome propose un ensemble de services professionnels.", "en": "Open daily from 8am to 8pm. The aerodrome offers professional services."}, "image": "tile_infos_1781167902885.png"}, "mapConfig": {"kioskPos": {"x": 580, "y": 730}, "imageUrl": "media__1781129951804.jpg", "paths": {"red": {"name": "", "hex": "#ef4444", "d": ""}}}};
+
+    // Load data
+    if (typeof supabaseClient !== 'undefined') {
+        supabaseClient.from('kiosque_config').select('data').eq('id', 1).single()
+            .then(({ data, error }) => {
+                if (error) throw error;
+                currentData = data.data || {};
+                if (Object.keys(currentData).length === 0) {
+                    currentData = DEFAULT_DATA;
+                }
+                populateForm();
+            })
+            .catch(err => {
+                console.error("Could not load config", err);
+                currentData = DEFAULT_DATA;
+                populateForm();
+            });
+    } else {
+        console.error("Supabase not loaded");
+        currentData = DEFAULT_DATA;
+        populateForm();
+    }
+
+    function getT(obj) {
+        if (!obj) return '';
+        if (typeof obj === 'string') return obj;
+        return obj[adminLang] || '';
+    }
+
+    function setT(obj, value) {
+        if (typeof obj === 'string') {
+            const multi = { fr: obj, en: obj, de: obj, es: obj };
+            multi[adminLang] = value;
+            return multi;
+        }
+        if (!obj) obj = { fr: '', en: '', de: '', es: '' };
+        obj[adminLang] = value;
+        return obj;
+    }
+
+    function populateForm() {
+        const d = currentData;
+        
+        if (!d.general) d.general = { title: {}, subtitle: {} };
+        if (!d.screensaver) d.screensaver = { title: {}, subtitle: {} };
+        if (!d.categories) d.categories = [];
+        if (!d.providers) d.providers = [];
+        
+        document.getElementById('gen_title').value = getT(d.general?.title);
+        document.getElementById('gen_subtitle').value = getT(d.general?.subtitle);
+        
+        document.getElementById('ss_title').value = getT(d.screensaver?.title);
+        document.getElementById('ss_subtitle').value = getT(d.screensaver?.subtitle);
+        
+        // Media is universal, not translated
+        document.getElementById('media_topVideo').value = d.media?.topVideoUrl || '';
+        
+        document.getElementById('aerops_title').value = getT(d.aerops?.title);
+        document.getElementById('aerops_headline').value = getT(d.aerops?.headline);
+        document.getElementById('aerops_desc').value = getT(d.aerops?.description);
+        document.getElementById('aerops_qrUrl').value = d.aerops?.qrUrl || ''; // universal
+        document.getElementById('aerops_image').value = d.aerops?.image || '';  // universal
+
+        if (!d.infosPratiques) d.infosPratiques = { title: {fr:"Infos Pratiques"}, headline: {fr:"Horaires"}, description: {fr:""}, image: "assets/hero_aviation.png" };
+        document.getElementById('infos_title').value = getT(d.infosPratiques?.title);
+        document.getElementById('infos_headline').value = getT(d.infosPratiques?.headline);
+        document.getElementById('infos_desc').value = getT(d.infosPratiques?.description);
+        document.getElementById('infos_image').value = d.infosPratiques?.image || '';
+        
+        // Map
+        if (!d.mapConfig) d.mapConfig = { kioskPos:{x:580,y:730}, imageUrl:'', paths:{red:{name:'',hex:'#ef4444',d:''}} };
+        document.getElementById('map_img').value = d.mapConfig.imageUrl || '';
+        
+        // Removed text inputs for map kiosk pos, we just render
+        renderEditorSidebar();
+        renderEditorMap();
+        
+        renderCategories();
+        renderProviders();
+    }
+
+    function renderCategories() {
+        const container = document.getElementById('categories-container');
+        container.innerHTML = '';
+        (currentData.categories || []).forEach((cat, i) => {
+            const div = document.createElement('div');
+            div.className = 'cat-card';
+            div.innerHTML = `
+                <img src="${cat.image}" alt="${getT(cat.name)}" onerror="this.src='assets/hero_aviation.png'">
+                <div class="cat-info">
+                    <strong>${getT(cat.name)}</strong>
+                    <small>ID: ${cat.id}${cat.special ? ' — Spécial: ' + cat.special : ''}</small>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="text" value="${escHtml(getT(cat.name))}" style="width:160px;padding:6px 10px;font-size:.85rem" id="cat_name_${i}" placeholder="Nom">
+                    <input type="text" value="${cat.image}" style="width:200px;padding:6px 10px;font-size:.85rem" id="cat_img_${i}" placeholder="Image (Universelle)">
+                    <input type="file" id="cat_upload_${i}" accept="image/*" style="display:none;" onchange="uploadMedia(this, 'cat_img_${i}')">
+                    <button class="btn" style="padding:6px 10px;font-size:.8rem;background:var(--border);color:var(--text)" onclick="document.getElementById('cat_upload_${i}').click()">📁 Uploader</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function renderProviders() {
+        const container = document.getElementById('providers-container');
+        container.innerHTML = '';
+        (currentData.providers || []).forEach((prov, i) => {
+            const catOptions = (currentData.categories || []).map(c =>
+                `<option value="${c.id}" ${prov.categoryId === c.id ? 'selected' : ''}>${getT(c.name)}</option>`
+            ).join('');
+
+            const card = document.createElement('div');
+            card.className = 'provider-card';
+            
+            // Map Data Init
+            const md = prov.mapData || { color: '', pinNum: '', x: '', y: '' };
+            
+            card.innerHTML = `
+                <div class="pc-header">
+                    <span class="pc-name">${prov.name}</span>
+                    <button class="btn btn-danger" onclick="deleteProvider(${i})">🗑 Supprimer</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Catégorie</label><select id="p_${i}_cat">${catOptions}</select></div>
+                    <div class="form-group"><label>Nom (Universel)</label><input type="text" id="p_${i}_name" value="${escHtml(prov.name)}"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Image</label>
+                        <div style="display:flex;gap:8px;">
+                            <input type="text" id="p_${i}_img" value="${escHtml(prov.image)}" style="flex:1">
+                            <input type="file" id="p_upload_${i}" accept="image/*" style="display:none;" onchange="uploadMedia(this, 'p_${i}_img')">
+                            <button class="btn btn-primary" style="padding:6px 10px;font-size:.8rem" onclick="document.getElementById('p_upload_${i}').click()">📁</button>
+                        </div>
+                    </div>
+                    <div class="form-group"><label>Lien QR Code</label><input type="text" id="p_${i}_qr" value="${escHtml(prov.qrUrl)}"></div>
+                </div>
+                <div class="form-group"><label>Description</label><textarea id="p_${i}_desc">${escHtml(getT(prov.description))}</textarea></div>
+                <div class="form-group"><label>Contact / Horaires</label><input type="text" id="p_${i}_contact" value="${escHtml(getT(prov.contact))}"></div>
+                
+                <div style="background:#fff; border:1px solid var(--border); padding:10px; border-radius:8px; margin-top:15px;">
+                    <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--accent);">📍 Localisation sur la Carte</h4>
+                    <div class="form-row" style="margin-bottom:0">
+                        <div class="form-group"><label>Ligne (Couleur)</label>
+                            <select id="p_${i}_mapc">
+                                <option value="" ${md.color===''?'selected':''}>Aucune</option>
+                                <option value="red" ${md.color==='red'?'selected':''}>Rouge</option>
+                                <option value="green" ${md.color==='green'?'selected':''}>Vert</option>
+                                <option value="blue" ${md.color==='blue'?'selected':''}>Bleu</option>
+                            </select>
+                        </div>
+                        <div class="form-group"><label>Numéro Punaise</label><input type="text" id="p_${i}_mapn" value="${escHtml(md.pinNum)}" placeholder="ex: 12"></div>
+                    </div>
+                    <div class="form-row" style="margin-bottom:0; align-items:flex-end;">
+                        <div class="form-group"><label>Coord X (0-1000)</label><input type="number" id="p_${i}_mapx" value="${md.x}" onchange="updateProviderMapData(${i})"></div>
+                        <div class="form-group"><label>Coord Y (0-1000)</label><input type="number" id="p_${i}_mapy" value="${md.y}" onchange="updateProviderMapData(${i})"></div>
+                        <div class="form-group"><button class="btn btn-secondary" onclick="document.getElementById('sec-map').scrollIntoView({behavior:'smooth'}); setEditorMode('provider'); document.getElementById('tool-provider-select').value='${i}';">📍 Placer via l'Éditeur</button></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function updateProviderMapData(i) {
+        if(currentData.providers[i] && currentData.providers[i].mapData) {
+            const vx = document.getElementById(`p_${i}_mapx`).value;
+            const vy = document.getElementById(`p_${i}_mapy`).value;
+            currentData.providers[i].mapData.x = vx;
+            currentData.providers[i].mapData.y = vy;
+            renderEditorMap();
+        }
+    }
+
+    function escHtml(s) { return (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+    function addProvider() {
+        gatherFormData();
+        currentData.providers.unshift({
+            id: 'new_' + Date.now(), categoryId: 'hotel', name: 'Nouveau prestataire',
+            image: '', description: {fr:'', en:'', de:'', es:''}, contact: {fr:'', en:'', de:'', es:''}, qrUrl: ''
+        });
+        renderProviders();
+        document.getElementById('sec-providers').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function deleteProvider(i) {
+        if (confirm('Supprimer "' + currentData.providers[i].name + '" ?')) {
+            gatherFormData();
+            currentData.providers.splice(i, 1);
+            renderProviders();
+        }
+    }
+
+    function gatherFormData() {
+        if (!currentData.general) return;
+        
+        currentData.general.title = setT(currentData.general.title, document.getElementById('gen_title').value);
+        currentData.general.subtitle = setT(currentData.general.subtitle, document.getElementById('gen_subtitle').value);
+
+        if (!currentData.screensaver) currentData.screensaver = {};
+        currentData.screensaver.title = setT(currentData.screensaver.title, document.getElementById('ss_title').value);
+        currentData.screensaver.subtitle = setT(currentData.screensaver.subtitle, document.getElementById('ss_subtitle').value);
+
+        currentData.media.topVideoUrl = document.getElementById('media_topVideo').value;
+
+        if (!currentData.aerops) currentData.aerops = {};
+        currentData.aerops.title = setT(currentData.aerops.title, document.getElementById('aerops_title').value);
+        currentData.aerops.headline = setT(currentData.aerops.headline, document.getElementById('aerops_headline').value);
+        currentData.aerops.description = setT(currentData.aerops.description, document.getElementById('aerops_desc').value);
+        currentData.aerops.qrUrl = document.getElementById('aerops_qrUrl').value;
+        currentData.aerops.image = document.getElementById('aerops_image').value;
+
+        if (!currentData.infosPratiques) currentData.infosPratiques = {};
+        currentData.infosPratiques.title = setT(currentData.infosPratiques.title, document.getElementById('infos_title').value);
+        currentData.infosPratiques.headline = setT(currentData.infosPratiques.headline, document.getElementById('infos_headline').value);
+        currentData.infosPratiques.description = setT(currentData.infosPratiques.description, document.getElementById('infos_desc').value);
+        currentData.infosPratiques.image = document.getElementById('infos_image').value;
+
+        currentData.categories.forEach((cat, i) => {
+            const nameInput = document.getElementById('cat_name_' + i);
+            const imgInput = document.getElementById('cat_img_' + i);
+            if (nameInput) cat.name = setT(cat.name, nameInput.value);
+            if (imgInput) cat.image = imgInput.value;
+        });
+        
+        // Map Config
+        if(!currentData.mapConfig) currentData.mapConfig = { kioskPos:{}, paths:{} };
+        currentData.mapConfig.imageUrl = document.getElementById('map_img').value;
+        // kioskPos and paths are directly updated in currentData via the editor interactions.
+
+        currentData.providers.forEach((prov, i) => {
+            const cat = document.getElementById('p_' + i + '_cat');
+            const name = document.getElementById('p_' + i + '_name');
+            const img = document.getElementById('p_' + i + '_img');
+            const desc = document.getElementById('p_' + i + '_desc');
+            const contact = document.getElementById('p_' + i + '_contact');
+            const qr = document.getElementById('p_' + i + '_qr');
+            
+            const mc = document.getElementById('p_' + i + '_mapc');
+            const mn = document.getElementById('p_' + i + '_mapn');
+            const mx = document.getElementById('p_' + i + '_mapx');
+            const my = document.getElementById('p_' + i + '_mapy');
+            
+            if (cat) prov.categoryId = cat.value;
+            if (name) prov.name = name.value; // Name is universal
+            if (img) prov.image = img.value;
+            if (qr) prov.qrUrl = qr.value;
+            
+            if (desc) prov.description = setT(prov.description, desc.value);
+            if (contact) prov.contact = setT(prov.contact, contact.value);
+            
+            if (mc && mn && mx && my) {
+                if(mc.value || mn.value) {
+                    prov.mapData = {
+                        color: mc.value,
+                        pinNum: mn.value,
+                        x: mx.value,
+                        y: my.value
+                    };
+                } else {
+                    prov.mapData = null;
+                }
+            }
+        });
+    }
+
+    function saveData() {
+        gatherFormData();
+        if (typeof supabaseClient === 'undefined') return alert('Supabase non configuré.');
+        
+        supabaseClient.from('kiosque_config').update({ data: currentData }).eq('id', 1)
+            .then(({ error }) => {
+                if (error) {
+                    alert("Erreur de sauvegarde : " + error.message);
+                } else {
+                    const toast = document.getElementById('toast');
+                    toast.style.display = 'block';
+                    setTimeout(() => toast.style.display = 'none', 3000);
+                }
+            });
+    }
+
+    // Stats
+    async function loadStats() {
+        if (typeof supabaseClient === 'undefined') return;
+        
+        const { data: clicks, error } = await supabaseClient.from('kiosque_clicks').select('*');
+        if (error) return console.error(error);
+
+        const stats = { total: { sessions: 0, clicks: {} }, daily: {} };
+        const todayKey = new Date().toISOString().slice(0, 10);
+        
+        clicks.forEach(c => {
+            const d = new Date(c.created_at).toISOString().slice(0, 10);
+            if (!stats.daily[d]) stats.daily[d] = { sessions: 0, clicks: {} };
+            
+            if (c.element_id === 'full_plan') { // approximate sessions by some metric or just count them all
+                stats.total.sessions++;
+                stats.daily[d].sessions++;
+            }
+            
+            stats.total.clicks[c.element_id] = (stats.total.clicks[c.element_id] || 0) + 1;
+            stats.daily[d].clicks[c.element_id] = (stats.daily[d].clicks[c.element_id] || 0) + 1;
+        });
+
+        const summary = document.getElementById('stat-summary');
+        const totalSessions = stats.total.sessions || 0;
+        const totalClicks = Object.values(stats.total.clicks || {}).reduce((a, b) => a + b, 0);
+        const todaySessions = stats.daily[todayKey]?.sessions || 0;
+        const todayClicks = Object.values(stats.daily[todayKey]?.clicks || {}).reduce((a, b) => a + b, 0);
+
+        summary.innerHTML = `
+            <div class="stat-card"><div class="stat-value">${totalSessions}</div><div class="stat-label">Sessions totales</div></div>
+            <div class="stat-card"><div class="stat-value">${totalClicks}</div><div class="stat-label">Clics totaux</div></div>
+            <div class="stat-card"><div class="stat-value">${todaySessions}</div><div class="stat-label">Sessions aujourd'hui</div></div>
+            <div class="stat-card"><div class="stat-value">${todayClicks}</div><div class="stat-label">Clics aujourd'hui</div></div>
+        `;
+
+        const sorted = Object.entries(stats.total.clicks).sort((a, b) => b[1] - a[1]);
+        const maxVal = sorted.length > 0 ? sorted[0][1] : 1;
+        const tbody = document.getElementById('stat-tbody');
+        tbody.innerHTML = sorted.map(([key, val]) => `
+            <tr>
+                <td>${key}</td>
+                <td><strong>${val}</strong></td>
+                <td style="width:40%"><div class="stat-bar" style="width:${(val / maxVal) * 100}%"></div></td>
+            </tr>
+        `).join('') || '<tr><td colspan="3" style="text-align:center;color:var(--text2)">Aucune donnée disponible</td></tr>';
+    }
+</script>
+</body>
+</html>

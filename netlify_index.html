@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aéropôle Grand Nancy Tomblaine — Borne Interactive</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body oncontextmenu="return false;">
+
+<div id="app">
+    <!-- Ambient Background -->
+    <div class="ambient-bg">
+        <div class="ambient-bg__image" style="background-image:url('assets/hero_aviation.png');"></div>
+        <div class="ambient-bg__gradient"></div>
+        <div class="ambient-bg__noise"></div>
+    </div>
+
+    <!-- ===== HEADER ===== -->
+    <header class="app-header">
+        <div class="header-brand">
+            <div class="header-logo" style="width: 140px; height: 50px; background: transparent; display: flex; align-items: center;">
+                <img src="assets/logo_aerops.png" alt="Aeropôle" class="blend-white-bg" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div class="header-brand-text">
+                <h1>AÉROPÔLE</h1>
+                <span>Grand Nancy Tomblaine</span>
+            </div>
+        </div>
+        <div class="header-meta">
+            <div>
+                <div class="header-clock" id="main-clock">--:--</div>
+                <div class="header-date" id="main-date">--</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== SCREENSAVER ===== -->
+    <div class="screen screensaver active" id="screen-attract" onclick="closeScreensaver()">
+        <video id="screensaver-video" autoplay loop muted style="position:absolute; width:100%; height:100%; object-fit:cover; opacity: 0.6; z-index:1;"></video>
+        <div class="attract-content" style="z-index:2;">
+            <div class="attract-icon" style="border-color: var(--gold);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            </div>
+            <h1 class="attract-title">Bienvenue à l'Aéropôle</h1>
+            <p class="attract-subtitle">Touchez l'écran pour accéder à vos services</p>
+        </div>
+    </div>
+
+    <!-- ===== HOME ===== -->
+    <main class="screen screen-home" id="screen-home" style="padding-top: 40px;">
+        
+        <!-- Video Banner -->
+        <div class="video-banner" style="border-radius: var(--radius-lg); overflow:hidden; margin-bottom: var(--gap); position:relative; height:180px; flex-shrink:0;">
+            <video id="top-video" autoplay loop muted style="width:100%; height:100%; object-fit:cover;"></video>
+            <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.2); z-index:2; pointer-events:none;">
+                <div style="display:flex; flex-direction:column; align-items:center;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5" width="48" height="48"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title" style="margin-bottom: var(--gap); text-align:center;">
+            <h2 id="ui-title" style="font-size:1.8rem; margin-bottom:4px; font-family:'Syne',sans-serif; letter-spacing: 0.05em; font-weight:700;">VOTRE AÉROPORT VOUS PROPOSE</h2>
+            <p id="ui-subtitle" style="color:var(--gold); font-weight:600; text-transform:uppercase; font-size:0.85rem; letter-spacing:0.1em;">Services à proximité</p>
+        </div>
+
+        <div class="bento-grid" style="display:flex; flex-direction:column; flex:1; gap:var(--gap); min-height:0;">
+            <!-- 2x2 Middle Grid -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:var(--gap); flex:2;">
+                <button class="bento-card bento-half" onclick="openCompanyModal('hotel')">
+                    <div class="bento-card__bg loaded" id="bg-hotel" style="opacity: 0.5;"></div>
+                    <div class="bento-card__gradient"></div>
+                    <div class="bento-card__content">
+                        <h2 class="bento-card__title" id="title-hotel">Hôtel</h2>
+                    </div>
+                </button>
+                <button class="bento-card bento-half" onclick="openCompanyModal('restaurant')">
+                    <div class="bento-card__bg loaded" id="bg-restaurant" style="opacity: 0.5;"></div>
+                    <div class="bento-card__gradient"></div>
+                    <div class="bento-card__content">
+                        <h2 class="bento-card__title" id="title-restaurant">Restaurant</h2>
+                    </div>
+                </button>
+                <button class="bento-card bento-half" onclick="openCompanyModal('taxi')">
+                    <div class="bento-card__bg loaded" id="bg-taxi" style="opacity: 0.5;"></div>
+                    <div class="bento-card__gradient"></div>
+                    <div class="bento-card__content">
+                        <h2 class="bento-card__title" id="title-taxi">Taxi VTC Services</h2>
+                    </div>
+                </button>
+                <button class="bento-card bento-half" onclick="openCompanyModal('map')">
+                    <div class="bento-card__bg loaded" id="bg-map" style="opacity: 0.5;"></div>
+                    <div class="bento-card__gradient"></div>
+                    <div class="bento-card__content">
+                        <h2 class="bento-card__title" id="title-map">Plan de l'Aéroport</h2>
+                    </div>
+                </button>
+            </div>
+
+            <!-- 1x3 Bottom Grid -->
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:var(--gap); flex:1.2;">
+                <button class="bento-card" onclick="openCompanyModal('locations')">
+                    <div class="bento-card__bg loaded" id="bg-locations" style="opacity: 0.5;"></div>
+                    <div class="bento-card__gradient"></div>
+                    <div class="bento-card__content">
+                        <h2 class="bento-card__title" id="title-locations" style="font-size:1.3rem;">Locations</h2>
+                    </div>
+                </button>
+                <button class="bento-card" onclick="openCompanyModal('aerops')" style="border-color: var(--gold-glow);">
+                    <div class="bento-card__bg loaded" id="bg-aerops" style="background-size:60%; background-repeat:no-repeat; background-position:top right; opacity:0.1;"></div>
+                    <div class="bento-card__gradient"></div>
+                    <div class="bento-card__content" style="display:flex; flex-direction:column; justify-content:center; height:100%;">
+                        <div style="margin-bottom:12px;">
+                            <img id="img-aerops" src="" alt="AEROPS" style="height:32px;">
+                        </div>
+                        <h2 class="bento-card__title" id="title-aerops" style="font-size:1.3rem; color:var(--gold);">AEROPS</h2>
+                        <p class="bento-card__desc" style="font-size:0.75rem;">Payez votre taxe avec l'application</p>
+                    </div>
+                </button>
+                <button class="bento-card" onclick="openCompanyModal('infos')">
+                    <div class="bento-card__bg loaded" id="bg-infos" style="opacity: 0.5;"></div>
+                    <div class="bento-card__gradient"></div>
+                    <div class="bento-card__content">
+                        <h2 class="bento-card__title" id="title-infos" style="font-size:1.3rem;">Infos Pratiques</h2>
+                    </div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="app-footer" style="display:flex; justify-content:space-between; align-items:center; margin-top:var(--gap); padding:16px 24px; background:var(--bg-card); border-radius:var(--radius-md); border:1px solid var(--border); flex-shrink:0;">
+            <div class="social-logos" style="display:flex; gap:16px; align-items:center;">
+                <span style="color:var(--text-tertiary); font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; margin-right:8px;">Réseaux :</span>
+                <!-- Text emojis representing social media since we don't have SVGs handy, but looks clean -->
+                <span style="font-size:1.2rem; filter: grayscale(1) brightness(2); opacity:0.7;">👻</span>
+                <span style="font-size:1.2rem; filter: grayscale(1) brightness(2); opacity:0.7;">🐦</span>
+                <span style="font-size:1.2rem; filter: grayscale(1) brightness(2); opacity:0.7;">🌐</span>
+                <span style="font-size:1.2rem; filter: grayscale(1) brightness(2); opacity:0.7;">🔵</span>
+            </div>
+            <div class="official-logos" style="display:flex; gap:24px; align-items:center;">
+                <div style="font-size:0.7rem; font-weight:800; color:var(--gold); text-transform:uppercase; text-align:right; line-height:1.2;">CCI Grand Nancy<br>Métropole</div>
+                <div style="width:1px; height:24px; background:var(--border);"></div>
+                <div style="font-size:0.85rem; font-weight:800; color:var(--text-primary); font-family:'Syne';">AÉROPÔLE</div>
+                <div style="width:1px; height:24px; background:var(--border);"></div>
+                <div style="font-size:0.75rem; font-weight:800; color:var(--text-secondary); text-transform:uppercase;">Métropole<br><span style="color:var(--gold);">GrandNancy</span></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Company Modal -->
+    <div class="modal" id="company-modal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(7, 11, 20, 0.85); backdrop-filter:blur(20px); align-items:center; justify-content:center;">
+        <div style="background:var(--bg-card); width:85%; max-width:900px; border-radius:var(--radius-xl); overflow:hidden; border:1px solid var(--border); box-shadow:var(--glass-shadow-hover); position:relative; animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
+            <div id="modal-cover" style="height:350px; background-size:cover; background-position:center; position:relative;">
+                <div style="position:absolute; inset:0; background:linear-gradient(0deg, var(--bg-card) 0%, transparent 50%);"></div>
+                <button onclick="closeCompanyModal()" style="position:absolute; top:24px; right:24px; background:rgba(0,0,0,0.5); backdrop-filter:blur(10px); color:white; width:48px; height:48px; border-radius:50%; font-size:24px; border:1px solid rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:10;">✕</button>
+            </div>
+            <div style="padding:40px; display:flex; gap:40px; position:relative; margin-top:-60px;">
+                <div style="flex:1;">
+                    <h2 id="modal-title" style="font-family:'Syne',sans-serif; font-size:3rem; color:white; margin-bottom:16px; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">Titre</h2>
+                    <p id="modal-desc" style="font-size:1.15rem; line-height:1.7; color:var(--text-secondary); margin-bottom:32px;">Description</p>
+                    
+                    <div style="display:inline-flex; align-items:center; gap:12px; font-weight:600; color:var(--gold); padding:16px 24px; background:var(--gold-glow); border-radius:var(--radius-full); border:1px solid rgba(200,169,81,0.2);">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91"/></svg>
+                        <span id="modal-contact">Contact</span>
+                    </div>
+                </div>
+                <div style="width:220px; display:flex; flex-direction:column; align-items:center; background:rgba(255,255,255,0.02); border:1px solid var(--border); padding:24px; border-radius:var(--radius-lg);">
+                    <div style="width:172px; height:172px; background:white; border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:16px; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+                        <img id="modal-qr" src="" style="width:156px; height:156px;" alt="QR Code">
+                    </div>
+                    <div style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" width="16" height="16"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                        <p style="text-align:center; font-size:0.8rem; font-weight:600; color:var(--text-primary); letter-spacing:0.05em; text-transform:uppercase;">Scannez-moi</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let cmsData = null;
+
+    // Screensaver Logic
+    let attractTimeout;
+    function resetAttractTimer() {
+        clearTimeout(attractTimeout);
+        attractTimeout = setTimeout(() => {
+            document.getElementById('screen-attract').classList.add('active');
+            document.getElementById('screen-home').classList.remove('active');
+            closeCompanyModal();
+        }, 120000); // 2 minutes
+    }
+
+    document.addEventListener('click', resetAttractTimer);
+    document.addEventListener('touchstart', resetAttractTimer);
+    
+    function closeScreensaver() {
+        document.getElementById('screen-attract').classList.remove('active');
+        document.getElementById('screen-home').classList.add('active');
+        resetAttractTimer();
+    }
+
+    function openCompanyModal(key) {
+        if(!cmsData) return;
+        const comp = cmsData.companies[key];
+        document.getElementById('modal-title').innerText = comp.name;
+        document.getElementById('modal-desc').innerText = comp.description;
+        document.getElementById('modal-contact').innerText = comp.contact;
+        document.getElementById('modal-cover').style.backgroundImage = `url('${comp.image}')`;
+        // generate simple qr code using api
+        document.getElementById('modal-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(comp.qrUrl)}`;
+        
+        document.getElementById('company-modal').style.display = 'flex';
+        resetAttractTimer();
+    }
+
+    function closeCompanyModal() {
+        document.getElementById('company-modal').style.display = 'none';
+    }
+
+    // Load CMS Data
+    fetch('/api/config')
+        .then(r => r.json())
+        .then(data => {
+            cmsData = data;
+            document.getElementById('ui-title').innerText = data.general.title;
+            document.getElementById('ui-subtitle').innerText = data.general.subtitle;
+            
+            document.getElementById('top-video').src = data.media.topVideoUrl;
+            document.getElementById('screensaver-video').src = data.media.screensaverVideoUrl;
+
+            ['hotel', 'restaurant', 'taxi', 'map', 'locations', 'aerops', 'infos'].forEach(key => {
+                const comp = data.companies[key];
+                if(comp) {
+                    document.getElementById(`title-${key}`).innerText = comp.name;
+                    document.getElementById(`bg-${key}`).style.backgroundImage = `url('${comp.image}')`;
+                    if (key === 'aerops') {
+                        document.getElementById(`img-aerops`).src = comp.image;
+                    }
+                }
+            });
+            resetAttractTimer();
+        })
+        .catch(err => console.error("Could not load config", err));
+
+    // Clock
+    setInterval(() => {
+        const d = new Date();
+        document.getElementById('main-clock').innerText = d.toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'});
+        document.getElementById('main-date').innerText = d.toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'});
+    }, 1000);
+</script>
+</body>
+</html>
