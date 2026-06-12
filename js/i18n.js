@@ -32,40 +32,7 @@ const translations = {
         departure: "Departure",
         destination: "Destination",
         search: "Search"
-    },
-    de: {
-        back: "ZURÜCK",
-        loading: "Laden...",
-        not_found: "Stadt nicht gefunden.",
-        no_provider: "Kein Anbieter verfügbar.",
-        downloadApp: "Scannen, um die App herunterzuladen",
-        you_are_here: "SIE SIND HIER",
-        wind: "Wind",
-        gusts: "Böen",
-        dew_point: "Taupunkt",
-        visibility: "Sichtweite",
-        cloudiness: "Bewölkung",
-        forecast: "Stündliche Vorhersage",
-        departure: "Abflug",
-        destination: "Ziel",
-        search: "Suchen"
-    },
-    es: {
-        back: "VOLVER",
-        loading: "Cargando...",
-        not_found: "Ciudad no encontrada.",
-        no_provider: "Ningún proveedor disponible.",
-        downloadApp: "Escanea para descargar la aplicación",
-        you_are_here: "USTED ESTÁ AQUÍ",
-        wind: "Viento",
-        gusts: "Ráfagas",
-        dew_point: "Punto de rocío",
-        visibility: "Visibilidad",
-        cloudiness: "Nubosidad",
-        forecast: "Pronóstico por hora",
-        departure: "Salida",
-        destination: "Destino",
-        search: "Buscar"
+
     }
 };
 

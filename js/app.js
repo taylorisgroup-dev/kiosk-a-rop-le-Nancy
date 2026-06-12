@@ -418,8 +418,8 @@ function closeModal() {
 function openAerops() {
     if (cmsData.aerops) {
         const a = cmsData.aerops;
-        const t = document.getElementById('aerops-page-title');
-        if (t) t.innerText = t(a.title) || 'Aerops';
+        const titleEl = document.getElementById('aerops-page-title');
+        if (titleEl) titleEl.innerText = t(a.title) || 'Aerops';
         const h = document.getElementById('aerops-headline');
         if (h) h.innerText = t(a.headline) || '';
         const d = document.getElementById('aerops-desc');
