@@ -430,6 +430,20 @@ function openAerops() {
         if (logo && a.image) {
             logo.src = a.image;
         }
+
+        // Generate dynamic QR code if url is provided
+        const qrContainer = document.getElementById('aerops-qr-code');
+        if (qrContainer && a.qrUrl) {
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: a.qrUrl,
+                width: 200,
+                height: 200,
+                colorDark: "#0f172a",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
     }
     showScreen('screen-aerops');
     resetAttractTimer();
